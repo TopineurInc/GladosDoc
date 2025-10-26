@@ -1,17 +1,20 @@
 ---
-title: Quick Start
+title: Getting Started
 description: Getting Started with Topineur
 icon: Album
 ---
-import { Terminal } from "lucide-react";
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Terminal } from 'lucide-react'
 
-## Introduction
+## Overview
 
-**Topineur** is a modern programming language designed with simplicity and readability in mind. It is made by developers for developers.
+Welcome to **Topineur**! This guide will walk you through everything you need to start building with our language.
 
 ## Installation
 
-To get started with Topineur, you'll need to install the **Topineur compiler**.
+<Steps>
+  <Step>
+Download the compiler :
 
 ```bash tab="<Terminal /> Using curl"
 # On Linux/macOS
@@ -22,14 +25,17 @@ curl -sSL https://topineur.org/install.sh | bash
 # On Linux/macOS
 wget -qO- https://topineur.org/install.sh | bash
 ```
-
-Verify your installation by running:
+  </Step>
+  <Step>
+Verify installation :
 
 ```bash title="Bash"
 glados --version
 ```
+  </Step>
+</Steps>
 
-## Your First Topineur Program
+## Your first Topineur Program
 
 Create a new file called `hello.top` and add the following code:
 
@@ -44,16 +50,16 @@ def main(): Int {
 Run your program using:
 
 ```bash
-glados run hello.top
+glados hello.top
 ```
 
 ## Basic Syntax
 
 ### Variables and Types
 
-In Topineur, you can use different types. For example :
+In **Topineur**, you can use different types. For example :
 
-```topineur title="Variables"
+```topineur
 let name: String = "World"      |- String Variable
 let age: Int = 25               |- Integer Variable
 let height: Float = 1.75        |- Float Variable
@@ -62,25 +68,33 @@ let isActive: Bool = true       |- Boolean Variable
 
 ### Functions
 
-Functions in Topineur are declared using the `def` keyword:
+Functions in Topineur are declared using the `def` keyword, and to return use the `top` keyword :
 
-```topineur title="Functions"
+```topineur
 |- Define a function add
 def add(a: Int, b: Int) -> Int {
-    return a + b
+    top a + b
 }
 
 |- Concatenates strings
-def greet(name: String) {
-    print("Hello, " ++ {name} ++ "!")
+def print_variable(variable: String) {
+    print("Variable is " ++ {variable} ++ "!")
+}
+
+|- Call the other functions
+def main(): Int {
+  let variable: Int = add(10, 5)
+
+  print_variable(variable)
 }
 ```
+
 
 ### Control Flow
 
 Topineur supports standard control flow structures:
 
-```topineur title="Control Flow"
+```topineur
 |- If statements
 if score > 100
   then print("High score!")
@@ -92,6 +106,42 @@ else
 |- Loops
 |- To be implemented
 ```
+
+### Objects
+
+Objects allow you to organize data and behavior together. Here's how we define an objects:
+
+```topineur
+|- Define an object Person
+object type Person {
+  name: String
+  age: Int
+
+  |- Introduce the person
+  def introduce(): Void {
+    print("Hi, I'm " ++ self.name ++ " and I'm " ++ self.age ++ " years old.")
+  }
+
+  |- Method with logic
+  def is_adult(): Bool {
+    if (self.age < 18)
+      then top True
+    else
+      top False
+  }
+}
+
+|- Use the Object
+let laurent = Person {
+  name = Laurent
+  age = 20
+}
+laurent.introduce()
+```
+
+### Lists and Arrays
+
+Work In progress
 
 ## Next Steps
 

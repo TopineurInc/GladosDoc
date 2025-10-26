@@ -28,4 +28,5 @@ export default defineConfig({
       parseMdx: true,
     },
   },
+  lastModifiedTime: 'git',
 });

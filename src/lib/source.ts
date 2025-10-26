@@ -9,7 +9,9 @@ import { createElement } from "react";
 export const source = loader({
   // Set the icons
   icon(icon) {
-    if (!icon) { return; }
+    if (!icon) {
+      return;
+    }
 
     if (icon in icons) return createElement(icons[icon as keyof typeof icons]);
   },

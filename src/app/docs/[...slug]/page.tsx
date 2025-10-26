@@ -1,13 +1,11 @@
 import { getPageImage, source } from "@/lib/source";
-import {
-  DocsBody,
-  DocsPage,
-} from "fumadocs-ui/page";
+import { DocsBody, DocsPage } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { LLMCopyButton, ViewOptions } from "@/components/fuma/page-actions";
+import { Separator } from "@/components/ui/separator"
 
 export default async function Page(props: PageProps<"/docs/[...slug]">) {
   const params = await props.params;
@@ -15,18 +13,19 @@ export default async function Page(props: PageProps<"/docs/[...slug]">) {
 
   if (!page) notFound();
 
-  const repo = 'GladosDoc';
-  const owner = 'skignes';
+  const repo = "GladosDoc";
+  const owner = "skignes";
 
   const MDX = page.data.body;
 
   return (
     <DocsPage
       tableOfContent={{
-        style: 'clerk',
+        style: "clerk",
       }}
       toc={page.data.toc}
       full={page.data.full}
+      lastUpdate={page.data.lastModified ? new Date(page.data.lastModified) : new Date()}
     >
       <h1 className="text-[1.75em] font-semibold">{page.data.title}</h1>
       <p className="text-lg text-fd-muted-foreground">
@@ -47,6 +46,7 @@ export default async function Page(props: PageProps<"/docs/[...slug]">) {
           })}
         />
       </DocsBody>
+      <Separator />
     </DocsPage>
   );
 }
