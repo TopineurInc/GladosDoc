@@ -1,5 +1,5 @@
-import { Book, GraduationCap, Presentation, FolderGit } from 'lucide-react';
-import Link, { type LinkProps } from 'next/link';
+import { Book, GraduationCap, Presentation, FolderGit } from "lucide-react";
+import Link, { type LinkProps } from "next/link";
 
 export default function DocsPage() {
   return (
@@ -13,32 +13,31 @@ export default function DocsPage() {
       <div className="mt-8 grid grid-cols-1 gap-4 text-start md:grid-cols-2">
         {[
           {
-            name: 'Documentation',
-            description:
-              'The full documentation of the Topineur language.',
+            name: "Documentation",
+            description: "The full documentation of the Topineur language.",
             icon: <Book className="size-full" />,
-            href: '/docs/language',
+            href: "/docs/language",
           },
           {
-            name: 'Tutorials',
+            name: "Tutorials",
             description:
-              'Step-by-step guides for beginners and advanced users.',
+              "Step-by-step guides for beginners and advanced users.",
             icon: <GraduationCap className="size-full" />,
-            href: '/docs/tutorials',
+            href: "/docs/tutorials",
           },
           {
-            name: 'Best Practices',
+            name: "Best Practices",
             description:
-              'Coding standards, design principles, and optimisation techniques.',
+              "Coding standards, design principles, and optimisation techniques.",
             icon: <Presentation className="size-full" />,
-            href: '/docs/best-practices',
+            href: "/docs/best-practices",
           },
           {
-            name: 'Sample Projects',
+            name: "Sample Projects",
             description:
-              'Real-world examples, applications, or projects built using the language.',
+              "Real-world examples, applications, or projects built using the language.",
             icon: <FolderGit className="size-full" />,
-            href: '/docs/sample-projects',
+            href: "/docs/sample-projects",
           },
         ].map((item) => (
           <Item key={item.name} href={item.href}>

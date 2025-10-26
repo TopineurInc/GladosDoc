@@ -1,7 +1,5 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 
-import { BookIcon } from "lucide-react";
-
 import Image from "next/image";
 
 /**
@@ -26,7 +24,7 @@ export function baseOptions(): BaseLayoutProps {
         </>
       ),
     },
-    // see https://fumadocs.dev/docs/ui/navigation/links
     // TODO: Make like Langage docs / Release / etc
+    githubUrl: "https://github.com/skignes/GladosDoc",
   };
 }
