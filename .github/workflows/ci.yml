@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+        cache: 'pnpm'
+
+    - name: Install pnpm
+      run: npm install -g pnpm
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Build the app
+      run: pnpm build
+
+    - name: Start the app
+      run: pnpm start &
+
+    - name: Wait for the app to be ready
+      run: |
+        echo "Waiting for the app to start..."
+        sleep 10
+        curl --retry 5 --retry-delay 5 http://localhost:3000
