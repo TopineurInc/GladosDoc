@@ -15,7 +15,6 @@ import { useCopyButton } from "fumadocs-ui/utils/use-copy-button";
 import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs.unstyled";
 import { mergeRefs } from "@/lib/merge-refs";
-import Image from "next/image";
 
 export interface CodeBlockProps extends ComponentProps<"figure"> {
   /**

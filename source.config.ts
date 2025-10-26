@@ -10,6 +10,9 @@ import { topineurTheme } from '@/shiki/topineur-theme';
 export const docs = defineDocs({
   docs: {
     schema: frontmatterSchema,
+    postprocess: {
+      includeProcessedMarkdown: true,
+    },
   },
   meta: {
     schema: metaSchema,
