@@ -1,0 +1,12 @@
+{
+  "title": "Documentation",
+  "description": "Technical documentation.",
+  "icon": "BookOpen",
+  "root": true,
+  "pages": [
+    "---Introduction---",
+    "index",
+    "getting-started",
+    "security"
+  ]
+}

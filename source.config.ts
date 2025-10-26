@@ -4,23 +4,28 @@ import {
   frontmatterSchema,
   metaSchema,
 } from 'fumadocs-mdx/config';
+import { topineurLanguage } from '@/shiki/topineur-language';
+import { topineurTheme } from '@/shiki/topineur-theme';
 
-// You can customise Zod schemas for frontmatter and `meta.json` here
-// see https://fumadocs.dev/docs/mdx/collections
 export const docs = defineDocs({
   docs: {
     schema: frontmatterSchema,
-    postprocess: {
-      includeProcessedMarkdown: true,
-    },
   },
   meta: {
     schema: metaSchema,
   },
+  dir: 'content/docs',
 });
 
 export default defineConfig({
   mdxOptions: {
-    // MDX options
+    rehypeCodeOptions: {
+      theme: 'github-light',
+      // theme: topineurTheme,
+      langs: [topineurLanguage],
+    },
+    remarkCodeTabOptions: {
+      parseMdx: true,
+    },
   },
 });

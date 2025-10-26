@@ -1,17 +1,38 @@
-import '@/app/global.css';
+import "@/app/global.css";
 import { RootProvider } from 'fumadocs-ui/provider/next';
-import { Inter } from 'next/font/google';
+import type { ReactNode } from 'react';
+import { Sora } from 'next/font/google';
+import { Metadata } from 'next'
+import { Body } from '@/app/layout.client';
 
-const inter = Inter({
-  subsets: ['latin'],
+const sora = Sora({
+  subsets: ["latin"],
+  variable: "--font-sora",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-export default function Layout({ children }: LayoutProps<'/'>) {
+export const metadata: Metadata = {
+  metadataBase: new URL('https://acme.com'),
+  alternates: {
+    canonical: '/',
+    languages: {
+      'en-US': '/en-US',
+    },
+  },
+  openGraph: {
+    images: '/topineur_logo.png',
+  },
+}
+
+export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={inter.className} suppressHydrationWarning>
-      <body className="flex flex-col min-h-screen">
-        <RootProvider>{children}</RootProvider>
-      </body>
+    <html lang="en" className={sora.className} suppressHydrationWarning>
+      <Body>
+        <RootProvider>
+          {children}
+        </RootProvider>
+      </Body>
     </html>
   );
 }

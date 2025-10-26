@@ -1,0 +1,102 @@
+---
+title: Quick Start
+description: Getting Started with Topineur
+icon: Album
+---
+import { Terminal } from "lucide-react";
+
+## Introduction
+
+**Topineur** is a modern programming language designed with simplicity and readability in mind. It is made by developers for developers.
+
+## Installation
+
+To get started with Topineur, you'll need to install the **Topineur compiler**.
+
+```bash tab="<Terminal /> Using curl"
+# On Linux/macOS
+curl -sSL https://topineur.org/install.sh | bash
+```
+
+```bash tab="Using wget"
+# On Linux/macOS
+wget -qO- https://topineur.org/install.sh | bash
+```
+
+Verify your installation by running:
+
+```bash title="Bash"
+glados --version
+```
+
+## Your First Topineur Program
+
+Create a new file called `hello.top` and add the following code:
+
+```topineur title="hello.top"
+|- Main function
+
+def main(): Int {
+  print("Hello, Topineur!")
+}
+```
+
+Run your program using:
+
+```bash
+glados run hello.top
+```
+
+## Basic Syntax
+
+### Variables and Types
+
+In Topineur, you can use different types. For example :
+
+```topineur title="Variables"
+let name: String = "World"      |- String Variable
+let age: Int = 25               |- Integer Variable
+let height: Float = 1.75        |- Float Variable
+let isActive: Bool = true       |- Boolean Variable
+```
+
+### Functions
+
+Functions in Topineur are declared using the `def` keyword:
+
+```topineur title="Functions"
+|- Define a function add
+def add(a: Int, b: Int) -> Int {
+    return a + b
+}
+
+|- Concatenates strings
+def greet(name: String) {
+    print("Hello, " ++ {name} ++ "!")
+}
+```
+
+### Control Flow
+
+Topineur supports standard control flow structures:
+
+```topineur title="Control Flow"
+|- If statements
+if score > 100
+  then print("High score!")
+else if score > 50
+  then print("Good effort!")
+else
+    print("Keep trying!")
+
+|- Loops
+|- To be implemented
+```
+
+## Next Steps
+
+Now that you've got the basics, you can:
+
+1. Explore the [Language Guide](/docs/language/guide) for detailed documentation
+2. Try the [Interactive Tutorial](/docs/language/tutorial)
+3. Check out [Example Projects](/docs/language/examples)

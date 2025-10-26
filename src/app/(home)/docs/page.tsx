@@ -1,0 +1,71 @@
+import { Book, GraduationCap, Presentation, FolderGit } from 'lucide-react';
+import Link, { type LinkProps } from 'next/link';
+
+export default function DocsPage() {
+  return (
+    <main className="container flex flex-col flex-1 justify-center items-center py-16 text-center z-2">
+      <h1 className="mb-4 text-3xl font-semibold md:text-4xl">
+        Getting Started
+      </h1>
+      <p className="text-fd-muted-foreground">
+        Portal to different sections of docs.
+      </p>
+      <div className="mt-8 grid grid-cols-1 gap-4 text-start md:grid-cols-2">
+        {[
+          {
+            name: 'Documentation',
+            description:
+              'The full documentation of the Topineur language.',
+            icon: <Book className="size-full" />,
+            href: '/docs/language',
+          },
+          {
+            name: 'Tutorials',
+            description:
+              'Step-by-step guides for beginners and advanced users.',
+            icon: <GraduationCap className="size-full" />,
+            href: '/docs/tutorials',
+          },
+          {
+            name: 'Best Practices',
+            description:
+              'Coding standards, design principles, and optimisation techniques.',
+            icon: <Presentation className="size-full" />,
+            href: '/docs/best-practices',
+          },
+          {
+            name: 'Sample Projects',
+            description:
+              'Real-world examples, applications, or projects built using the language.',
+            icon: <FolderGit className="size-full" />,
+            href: '/docs/sample-projects',
+          },
+        ].map((item) => (
+          <Item key={item.name} href={item.href}>
+            <Icon>{item.icon}</Icon>
+            <h2 className="mb-2 font-medium">{item.name}</h2>
+            <p className="text-sm text-fd-muted-foreground">
+              {item.description}
+            </p>
+          </Item>
+        ))}
+      </div>
+    </main>
+  );
+}
+
+function Icon({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mb-2 size-8 rounded-lg border p-1 text-fd-muted-foreground bg-fd-muted shadow-md">
+      {children}
+    </div>
+  );
+}
+
+function Item(props: LinkProps & { children: React.ReactNode }) {
+  return (
+    <Link {...props} className="bg-fd-card rounded-2xl border p-4 shadow-lg">
+      {props.children}
+    </Link>
+  );
+}
