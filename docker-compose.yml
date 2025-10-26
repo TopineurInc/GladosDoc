@@ -1,0 +1,7 @@
+---
+services:
+  gladosdoc:
+    container_name: "gladosdoc"
+    build: ./
+    ports:
+      - "3002:3000"
