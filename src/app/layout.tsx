@@ -28,6 +28,10 @@ export const metadata: Metadata = {
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={sora.className} suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/topineur_logo.png" type="image/png" sizes="32x32" />
+        <meta name="glados-doc" content="Glados Doc" />
+      </head>
       <Body>
         <RootProvider>{children}</RootProvider>
       </Body>
