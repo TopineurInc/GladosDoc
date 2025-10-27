@@ -1,0 +1,6 @@
+{
+  "title": "Tutorials",
+  "description": "Step-by-step guides to learn Topineur.",
+  "icon": "ListOrdered",
+  "pages": ["index", "simple-functions"]
+}
