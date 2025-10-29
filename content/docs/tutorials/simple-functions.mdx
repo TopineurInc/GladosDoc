@@ -1,0 +1,107 @@
+---
+title: Simple Functions
+description: Learn step by step how to declare, call, and compose Topineur functions.
+icon: FunctionSquare
+---
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+## Why focus on functions?
+
+In **Topineur**, functions are the building blocks of every program. They help you organize logic, reuse code, and keep your applications easy to understand.
+
+<Steps>
+  <Step title="Understand the anatomy">
+Every function starts with the `def` keyword, followed by a name, a parameter list, an optional return type, and a body surrounded by braces.
+
+```topineur title="Generic function layout"
+def function_name(param: Type) -> ReturnType {
+  |- Do some work
+  top result_value
+}
+```
+  </Step>
+  <Step title="Write a first function">
+Let us create a greeter that accepts a name and returns a message.
+
+```topineur title="greeter.top"
+def greet(name: String) -> String {
+  top "Hello, " ++ name ++ "!"
+}
+```
+
+Topineur uses `++` to concatenate strings. The `top` keyword returns the final value.
+  </Step>
+  <Step title="Call your function">
+Call the function from `main` and display the result.
+
+```topineur
+def main(): Int {
+  let message: String = greet("Topineur Learner")
+  print(message)
+  top 0
+}
+```
+
+Always return an `Int` from `main` to signal the program status to the runtime.
+  </Step>
+</Steps>
+
+## Returning other types
+
+Functions can return any type. If you do not need to return a value, you can omit the arrow and `top` statement.
+
+```topineur
+def log_status(status: Bool) {
+  if status
+    then print("All systems go.")
+  else
+    print("Please investigate.")
+}
+```
+
+Use an explicit return when the function’s result is important to the caller:
+
+```topineur
+def add(a: Int, b: Int) -> Int {
+  top a + b
+}
+```
+
+## Composing functions
+
+You can call functions from inside other functions to keep each one focused on a single task.
+
+```topineur
+def normalize(name: String) -> String {
+  top uppercase(name)
+}
+
+def format_user(name: String, score: Int) -> String {
+  let label: String = normalize(name)
+  top label ++ " scored " ++ to_string(score)
+}
+```
+
+## Try it yourself
+
+1. Write a function `double` that takes an `Int` and returns the doubled value.  
+2. Create another function `announce_double` that prints `"Double is X"` using the result of `double`.  
+3. Call them from `main` and return `0` when you are done.
+
+```topineur title="Solution sketch"
+def double(value: Int) -> Int {
+  top value * 2
+}
+
+def announce_double(value: Int) {
+  let doubled: Int = double(value)
+  print("Double is " ++ to_string(doubled))
+}
+
+def main(): Int {
+  announce_double(21)
+  top 0
+}
+```
+
+Keep experimenting: small, focused functions make it easier to test, document, and extend your Topineur programs.
