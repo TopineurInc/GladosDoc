@@ -23,8 +23,7 @@ export const docs = defineDocs({
 export default defineConfig({
   mdxOptions: {
     rehypeCodeOptions: {
-      theme: 'github-light',
-      // theme: topineurTheme,
+      theme: topineurTheme,
       langs: [topineurLanguage],
     },
     remarkCodeTabOptions: {

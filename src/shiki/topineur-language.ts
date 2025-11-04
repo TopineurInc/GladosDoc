@@ -3,28 +3,64 @@ import type { LanguageRegistration } from "shiki";
 export const topineurLanguage: LanguageRegistration = {
   name: "topineur",
   scopeName: "source.topineur",
+  aliases: ["top"],
   patterns: [
-    // Get the function definition pattern
+    // Comments
+    { match: "\\|-.*$", name: "comment.line.topineur" },
+
+    // Decorators
     {
-      match: "\\b(def)\\b",
+      match: "@([A-Za-z_][\\w-]*)",
+      captures: {
+        "0": { name: "meta.decorator.topineur" },
+        "1": { name: "entity.name.decorator.topineur" },
+      },
+    },
+
+    // Package / import
+    { match: "\\b(package|import)\\b", name: "keyword.declaration.topineur" },
+
+    // Control keywords and declarations
+    {
+      match:
+        "\\b(def|let|object|type|fun|for|in|do|end|if|then|else|while|return|top|self|true|false)\\b",
       name: "keyword.control.topineur",
     },
-    // Get the Type pattern
+
+    // Function definitions
     {
-      match: "\\b(Int|String|Bool|Float)\\b",
-      name: "support.type.topineur",
+      match: "\\bdef\\s+([A-Za-z_][\\w]*)\\s*(?=\\()",
+      captures: {
+        "0": { name: "keyword.control.topineur" },
+        "1": { name: "entity.name.function.topineur" },
+      },
     },
-    // Get the number pattern
+
+    // Field / variable names
+    { match: "\\b([a-z_][\\w]*)\\b", name: "variable.other.topineur" },
+
+    // Type identifiers
+    { match: "\\b(Int|Float|Bool|String|Result|[A-Z][A-Za-z0-9_]*)\\b", name: "support.type.topineur" },
+
+    // Numbers
+    { match: "\\b\\d+\\.\\d+\\b", name: "constant.numeric.float.topineur" },
+    { match: "\\b\\d+\\b", name: "constant.numeric.integer.topineur" },
+
+    // Strings
     {
-      match: "\\b([0-9]+)\\b",
-      name: "constant.numeric.topineur",
+      begin: '"',
+      end: '"',
+      name: "string.quoted.double.topineur",
+      patterns: [{ match: "\\\\.", name: "constant.character.escape.topineur" }],
     },
-    // Get the comment pattern
-    {
-      match: "\\|\\-.*$",
-      name: "comment.line.topineur",
-    },
+
+    // Operators
+    { match: "\\+|\\-|\\*|\\/|<=|>=|<|>|%|==|\\+\\+|\\.\\.", name: "keyword.operator.topineur" },
+
+    // Dotted identifiers
+    { match: "\\b([A-Za-z_][\\w]*)(\\.[A-Za-z_][\\w]*)+\\b", name: "variable.other.module.topineur" },
   ],
+
   repository: {
     // Is empty
   },

@@ -37,23 +37,53 @@ glados --version
 
 ## Your first Topineur Program
 
-Create a new file called `hello.top` and add the following code:
+Create a new file called `main.top` and add the following code:
 
-```topineur title="hello.top"
+```topineur title="main.top"
 |- Main function
+package main
 
 def main(): Int {
-  print("Hello, Topineur!")
+  println("Hello, Topineur!")
 }
 ```
 
 Run your program using:
 
 ```bash
-glados hello.top
+glados main.top
 ```
 
 ## Basic Syntax
+
+### Packages and Imports
+
+#### Modules [!toc]
+
+Declare a module's package at the top of a file with the `package` keyword. For example:
+
+```topineur
+package lib.hello
+```
+
+Conventions :
+- Module paths map to filesystem paths. Each `.` is like a `/`.
+  - `lib.hello` -> `lib/hello.top`
+
+#### Imports [!toc]
+
+Use `import` with the module path to bring a module into scope. Examples:
+
+```topineur
+import std.core
+import std.collections.list
+import std.string
+```
+
+Conventions :
+- Use dot notation to import nested modules (e.g., `std.collections.list`).
+- `std` is the standard library prefix.
+
 
 ### Variables and Types
 
@@ -72,20 +102,20 @@ Functions in Topineur are declared using the `def` keyword, and to return use th
 
 ```topineur
 |- Define a function add
-def add(a: Int, b: Int) -> Int {
+def add(a: Int, b: Int): Int {
     top a + b
 }
 
 |- Concatenates strings
-def print_variable(variable: String) {
-    print("Variable is " ++ {variable} ++ "!")
+def print_variable(variable: String): Void {
+    println("Variable is " ++ variable ++ "!")
 }
 
 |- Call the other functions
 def main(): Int {
   let variable: Int = add(10, 5)
 
-  print_variable(variable)
+  print_variable(show(variable))
 }
 ```
 
@@ -94,54 +124,156 @@ def main(): Int {
 
 Topineur supports standard control flow structures:
 
+<Callout title="If Rules" type="warning">
+  Control-flow blocks must be complete: you can't write an `if` without a matching `else`.
+</Callout>
+
 ```topineur
 |- If statements
-if score > 100
-  then print("High score!")
-else if score > 50
-  then print("Good effort!")
-else
-    print("Keep trying!")
+if score > 100 then println("High score!")
+else if score > 50 then println("Good effort!")
+else println("Keep trying!")
 
 |- Loops
-|- To be implemented
+|- While loops
+while i > 0 do
+    println("Number is " ++ show(i))
+    i = i + 1
+end
+
+|- For loops
+for i in 1..5 do
+    println("Number is " ++ show(i))
+end
 ```
 
 ### Objects
 
-Objects allow you to organize data and behavior together. Here's how we define an objects:
+Objects allow you to organize data and behavior together. Here's how we define an object.
+
+<Callout title="Indentation and Syntax rules" type="warning">
+  - Keep indentation consistent. If you use 2 spaces, stick with 2 spaces throughout the file.
+  - Indentation matters for readability and for some tooling.
+</Callout>
 
 ```topineur
 |- Define an object Person
 object type Person {
-  name: String
+  name: String = "Laurent"
   age: Int
 
   |- Introduce the person
   def introduce(): Void {
-    print("Hi, I'm " ++ self.name ++ " and I'm " ++ self.age ++ " years old.")
+    println("Hi, I'm " ++ self.name ++ " and I'm " ++ show(self.age) ++ " years old.")
   }
 
   |- Method with logic
   def is_adult(): Bool {
-    if (self.age < 18)
-      then top True
-    else
-      top False
+    if self.age < 18 then top True
+    else top False
   }
 }
 
-|- Use the Object
+|- Define the Object globally
 let laurent = Person {
-  name = Laurent
+  name = Laurent,
   age = 20
 }
-laurent.introduce()
+
+|- Use the Object
+def main(): Int {
+    laurent.introduce()
+    if laurent.is_adult() then top 0
+    else top 1
+}
 ```
 
-### Lists and Arrays
+### Lists and Tuples
 
-Work In progress
+Lists and tuples serve are available in this language. This is how to use them:
+
+#### Lists
+
+Create lists with a type annotation and square brackets.
+
+```topineur
+package main
+import std.collections.list
+
+|- Main function
+def main(): Int {
+  |- Create a list of string
+  let glados: List[Int] = [1, 2, 3, 4]
+
+  |- Length and indexing
+  let g: Int = list_length(glados)
+  let first: Int = glados[0]
+}
+```
+
+#### Tuples
+
+Create tuples like you would create a **list**.
+
+```topineur
+package main
+
+|- Main function
+def main(): Int {
+  |- Define a tuple
+  let coffee_guys: Tuple[String] = ("axel", "sylas")
+}
+```
+
+### Anonymous functions
+
+Anonymous function are a one-line function. You can use it to create inline functions without declaring a named function. They are useful for short operations.
+
+#### Syntax [!toc]
+
+```topineur
+fun ((<param1>: <Type1>, <param2>: <Type2>, ...): <ReturnType> -> <expression>)
+```
+
+#### Example [!toc]
+
+Use the `fun` expression to create an anonymous function and assign it to a variable, then call it from `main`.
+
+```topineur
+package main
+
+|- Main function
+def main(): Int {
+  |- Define a anonymous fnction
+  fun((a: Int, b: Int): Int -> top a + b)
+
+  let sum: Int = add(3, 4)
+  println("3 + 4 = " ++ show(sum))
+  top 0
+}
+```
+
+### Decorateur
+
+A decorator is a function that can take another function as an argument and returns a new function, but this will be available later. For now it is used for memoization.
+
+Usage :
+
+```topineur
+package main
+
+@cache
+def fib(n: Int): Int {
+  if n <= 1 then top n
+  else top fib(n - 1) + fib(n - 2)
+}
+
+def main(): Int {
+  let f: Int = fib(5)
+  println("fib(5) = " ++ show(f))
+  top 0
+}
+```
 
 ## Next Steps
 
