@@ -1,0 +1,109 @@
+---
+title: Compilation
+description: Transforms Topineur source into bytecode and how the VM executes it.
+icon: ListTodo
+---
+
+## Compilation
+
+This page explains how Topineur source (`.top`) is turned into runnable bytecode in the Glados implementation. It summarizes the compiler pipeline, module resolution and caching, the shape of the compiled "code object" (bytecode) and how the VM consumes it.
+
+Where applicable, the implementation reference files are `src/Compiler.hs`, `src/CodeGen.hs`, `src/AST.hs` and `src/VM.hs` in the Glados repository.
+
+## Contract
+
+- Inputs: a Topineur source file (path), a `CompilerConfig` (module search paths, cache options), and the global module cache.
+- Outputs: an in-memory compiled CodeObject (bytecode) ready to execute in the VM and optionally a persistent bytecode cache entry.
+- Error modes: parse errors, macro expansion errors, compile-time name resolution errors, missing imports, and runtime mismatches when bytecode is incompatible with the VM.
+
+## High-level pipeline
+
+1. Read source. The compiler loads the `.top` file contents from disk using the configured module search paths.
+2. Parse. The source text is parsed into an AST (`Expr` variants described in `src/AST.hs`).
+3. Macro expansion / transforms. Macros and compiler-time transforms are applied (see `src/MacroExpander.hs`).
+4. Name resolution & analysis. The compiler resolves local and module-level names, tracks lexical scopes and prepares closures.
+5. Code generation. The analyzed AST is lowered into a CodeObject: a compact sequence of VM instructions (the bytecode). This step is implemented in `src/CodeGen.hs`.
+6. Emit / cache. The resulting CodeObject is placed into the module cache in memory (`ModuleCache` / `ModuleState`) and may be serialized to the bytecode cache on disk via the compiler's cache hooks.
+7. Execution. The VM (`src/VM.hs`) loads the CodeObject into its `vCodeObjects` store and begins execution when the module's entry function (often `main`) is invoked.
+
+## Module resolution and the Module cache
+
+The compiler resolves imports using the configured module paths (for example, `CompilerConfig.cfgModulePaths`). A dotted module name like `std.collections.list` is mapped to a path by joining the name components and adding the `.top` suffix. Resolution is implemented in the compiler's module-loading logic (`resolveModulePath` / `loadModule` in `src/Compiler.hs`).
+
+To avoid re-compiling the same module repeatedly, Glados keeps a `ModuleCache` (and related `ModuleState`) while compiling a program. The cache maps canonical module names (or resolved file paths) to compiled CodeObjects and their metadata (exports, compiled symbols, dependency list). When a module is requested multiple times, the compiler returns the cached CodeObject unless the cache indicates the module is stale.
+
+Circular imports are detected during module loading and handled by the ModuleState machinery; the compiler records partially-initialized modules so that mutual recursion between modules can resolve at compile/run time.
+
+## Bytecode: what it is and how it's represented
+
+In Glados, "bytecode" is the compiled CodeObject produced by the code generator. Conceptually it contains:
+
+- A list/array of instructions (opcodes) such as `IAssign`, `ICall`, `IReturn`, `IJump`, `IJumpIfFalse`, `IMakeClosure`, `ILoadClosure`, `IStoreClosure`, `IListCreate`, `IListGet`, `IObjectCreate`, and similar (the full set is defined with the `Instr` type in `src/AST.hs` / `src/VM.hs`).
+- A constant pool (literals: strings, numbers, symbols) referenced by instruction operands.
+- Metadata: local variable layout, closure-environment descriptors, and references to other CodeObjects (for nested functions).
+
+This CodeObject is the runtime unit the VM executes. It is not a platform machine-code binary — it's an interpreter-level bytecode specific to Glados's VM.
+
+### Storage / serialization
+
+The compiler exposes hooks to persist compiled bytecode to disk (often called the bytecode cache). These hooks are named along the lines of `loadBytecodeCache` and `saveBytecodeCache` in the compiler pipeline. When enabled, the compiler will attempt to load a serialized CodeObject for a module before compiling its source, and save the fresh CodeObject after compilation. The cache key is typically derived from the resolved module path and may include a source checksum or timestamp so stale cache entries are rejected.
+
+The concrete on-disk format is an implementation detail of the Glados compiler; at runtime the VM loads the serialized representation and reconstructs the in-memory CodeObject. The advantage of a serialized bytecode cache is much faster program start (skipping parsing, macro expansion and codegen) and reproducible startup performance in environments with many modules.
+
+## How the VM consumes CodeObjects
+
+The VM keeps a table (for example `vCodeObjects` in `VMState`) of CodeObjects. When execution reaches a function or module entry, the VM creates a new frame referencing the CodeObject's instruction array and constant pool. The instruction dispatch loop reads opcodes and executes their semantics (stack manipulation, control flow, calls and returns, closure operations).
+
+Bytecode-level calls (native vs. builtin):
+
+- Calls to Topineur functions are represented as `ICall`/`ITailCall` opcodes that transfer control into a CodeObject-based frame.
+- Builtin functions (implemented in Haskell) are represented as `VBuiltin` values and invoked directly by the VM when encountered.
+
+## Compiler-level caching, invalidation and compatibility
+
+Because bytecode serialization is an implementation detail, the compiler must be careful about compatibility between saved bytecode and the running VM. Typical strategies include:
+
+- Include a compiler version or bytecode format version in the serialized blob and refuse to load mismatched versions.
+- Include a checksum or timestamp of the source file (or the entire dependency graph) and invalidate the bytecode if it is older than the sources it depends on.
+- Store symbol export signatures so the loader can validate that the module's public API matches what other modules expect.
+
+If incompatibilities are detected, the compiler falls back to re-parsing and re-generating the bytecode from source.
+
+## Example — what compileTopineurFile does (conceptual)
+
+1. Given an absolute path to `x.top`, check `ModuleCache` for an existing, valid CodeObject.
+2. If found and valid, return the cached CodeObject.
+3. Otherwise, read `x.top` and parse into AST.
+4. Expand macros and perform name resolution.
+5. Lower to a CodeObject via code generation (`CodeGen`), producing the instruction sequence and constant pool.
+6. Insert the CodeObject into the `ModuleCache` and call `saveBytecodeCache` (if caching is enabled).
+7. Return the CodeObject for immediate execution or linking into the application.
+
+The actual entrypoint in the Glados codebase is named similarly to `compileTopineurFile` in `src/Compiler.hs` and follows this general flow.
+
+## Debugging tips
+
+- To inspect generated bytecode: add a pretty-printer for CodeObjects (the compiler or codegen typically includes a debugging dump option). Dumping instruction indices, opcodes and constants makes it easier to map runtime errors to instruction offsets.
+- If an imported module appears out-of-date, check that the bytecode cache invalidation criteria (timestamp/checksum/version) are correct.
+- Use runtime traps and error messages produced by the VM (`src/VM.hs`) — they include frame and instruction position to help locate faulty codegen.
+
+## Edge cases and pitfalls
+
+- Circular imports: the module loader must provide a partially-initialized ModuleState so mutually recursive modules can resolve symbols at runtime.
+- Stale bytecode: if the serialization doesn't capture dependency changes, programs may execute old logic. Prefer storing a dependency fingerprint.
+- VM/bytecode mismatch: when the VM changes (new opcodes or instruction semantics), old serialized bytecode must be rejected.
+
+## Where to read the implementation
+
+- Compiler orchestration and module loading: `src/Compiler.hs` — `compileTopineurFile`, `ModuleCache`, `ModuleState`, and module resolution.
+- Code generation and the mapping from AST to instruction stream: `src/CodeGen.hs`.
+- AST and instruction enumerations: `src/AST.hs` (the `Expr` and `Instr` types).
+- VM execution engine: `src/VM.hs` (bytecode dispatch, builtin invocation, runtime errors, `VMState`).
+- Builtins and runtime primitives: `src/Builtins.hs` (how host functions are exposed and invoked).
+
+## Next steps I can take
+
+- Verify symbol names, function names and exact cache hook names by scanning the Glados source tree and reconcile this doc with exact identifiers.
+- Add a small example module plus a dumped bytecode output to `content/docs/examples/compilation/` showing a simple function and its CodeObject (for teaching and debugging).
+
+If you want, I can now scan the Glados repo sources and update this page with exact function names, file references and example bytecode dumps. Which would you like me to do next?

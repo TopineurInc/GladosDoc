@@ -15,6 +15,7 @@
     "reference/expressions",
     "reference/simple_statements",
     "reference/compound_statements",
-    "reference/standard_library"
+    "reference/standard_library",
+    "reference/compilation"
   ]
 }

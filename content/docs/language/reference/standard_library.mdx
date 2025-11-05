@@ -199,20 +199,26 @@ Conversion behaviors:
 
 Example Topineur module using stdlib modules:
 
-```lisp
-(package main)
+```topineur
+package main
 
-(import std.core)
-(import std.collections.list)
-(import std.string)
+import std.core
+import std.collections.list
+import std.string
 
-(define (main)
-  (let ((words (list_single "Top") ) )
-    (let ((sentence (list_concat words (list_single "Ineur"))))
-      (let ((shouted (string_append (string_append (list_head sentence) "-" ) (list_get sentence 1))))
-        (println sentence)
-        (println shouted)
-        0))))
+def main(): Int {
+  let words = ["Top", "Ineur"]
+  let sentence = list_join(words, "-")
+
+  let shouted = string_pad_right(sentence, 8, "!")
+
+  let duplicated = core_pipe(3, fun (value: Int): Int -> core_apply_twice(value, fun (n: Int): Int -> n + 1))
+
+  println(sentence)
+  println(shouted)
+  println(show(duplicated))
+  top 0
+}
 ```
 
 Imports are cached by the compiler; repeated imports are cheap. Standard library modules use a `module_symbol` naming convention (for example `std_math_clamp`) to avoid global name collisions.
