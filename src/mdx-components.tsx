@@ -1,4 +1,6 @@
 import defaultMdxComponents from "fumadocs-ui/mdx";
+import * as FilesComponents from 'fumadocs-ui/components/files';
+import * as TabsComponents from 'fumadocs-ui/components/tabs';
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import type { MDXComponents } from "mdx/types";
 import { CodeBlock, Pre } from "@/components/fuma/codeblock";
@@ -8,6 +10,8 @@ import { Callout } from "@/components/fuma/callout";
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
     ...defaultMdxComponents,
+    ...TabsComponents,
+    ...FilesComponents,
     Callout: Callout,
     Step: Step,
     Steps: Steps,

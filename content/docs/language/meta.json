@@ -10,6 +10,7 @@
     "tech-stack",
     "---Technical Documentation---",
     "guide",
-    "lexical"
+    "reference/lexical",
+    "reference/import"
   ]
 }
