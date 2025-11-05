@@ -1,0 +1,184 @@
+---
+title: Compound Statements
+description: Groups multiple statements into a single executable block.
+icon: Component
+---
+
+## Compound statements (Topineur)
+
+This page describes Topineur's compound forms — constructs that group multiple expressions or introduce control flow and bindings. The descriptions below are aligned with the Glados implementation (see referenced files for authoritative behavior).
+
+Topineur is expression-oriented: many compound forms evaluate to a value. The compiler lowers these forms to `CodeObject`s and VM instructions; see the source references after each section.
+
+### if
+
+Syntax
+
+```
+(if condition then-expr else-expr)
+```
+
+Semantics
+
+- `condition` is evaluated first. If it yields `#f` (or `nil`) the `else-expr` is evaluated; otherwise the `then-expr` is evaluated. Only the chosen branch is evaluated.
+
+Where implemented
+
+- AST: `EIf` in `src/AST.hs`.
+- Compiler/Codegen: handled by compiler passes and lowered into conditional jumps during code generation.
+
+### begin (sequencing)
+
+Syntax
+
+```
+(begin expr1 expr2 ... exprN)
+```
+
+Semantics
+
+- Evaluate expressions in order and return the value of the last expression. Use for sequencing side-effecting calls.
+
+Where implemented
+
+- Grammar and semantics: `docs/LANGUAGE_GUIDE.md`.
+- Lowered to a linear sequence of instructions by the compiler.
+
+### let and letrec (local bindings)
+
+Syntax
+
+```
+(let ((name value) ...)
+  body)
+
+(letrec ((name value) ...)
+  body)
+```
+
+Semantics
+
+- `let` evaluates each `value`, binds the names, then runs `body` with those bindings.
+- `letrec` creates mutually-recursive bindings visible inside the `value` expressions (suitable for recursive functions).
+
+Where implemented
+
+- AST forms described in `docs/LANGUAGE_GUIDE.md` and represented in the compiler pipeline.
+- The compiler desugars and performs closure conversion; code generation assigns locals and emits instructions like `IAssign` and locals management (`src/CodeGen.hs`, `src/Compiler.hs`).
+
+### lambda (anonymous functions)
+
+Syntax
+
+```
+(lambda (param1 param2 ...) body)
+```
+
+Semantics
+
+- Creates a closure capturing free variables lexically. At runtime this is a `VClosure` value and the function body is compiled into a `CodeObject`.
+
+Where implemented
+
+- AST: `ELambda` in `src/AST.hs`.
+- Codegen: `src/CodeGen.hs` (compile lambda to `CodeObject`).
+
+### define (top-level and local definitions)
+
+Syntax
+
+```
+(define name expr)
+(define (fn args...) body) ; sugar for a lambda binding
+```
+
+Semantics
+
+- Binds `name` to the value of `expr`. Function sugar is rewritten to a `lambda` during parsing/transform steps.
+- Top-level `define`s are collected into module definitions and compiled into `CodeObject`s available to importers.
+
+Where implemented
+
+- AST: `EDefine` in `src/AST.hs`.
+- Compiler: `compileTopLevel`, `compileDefinition` in `src/Compiler.hs`.
+
+### while and for
+
+Syntax (AST-level)
+
+```
+EWhile and EFor exist in the AST and can be produced by the parser or desugaring phases.
+```
+
+Notes
+
+- The VM instruction set contains loop-related instructions (`IWhile`, `IFor`, `IBreak`, `IContinue`) (`src/AST.hs`). `src/VM.hs` implements instruction dispatch; some loop instructions may be placeholders depending on implementation status. The language encourages using recursion and tail calls for iteration; the compiler supports tail-call optimization (`cfgTCO`).
+
+### object declarations / methods
+
+Syntax (source-level)
+
+```
+EObjectDecl -- object type declaration with fields and methods (see AST)
+```
+
+Semantics
+
+- Objects and methods are supported: methods compile to separate `CodeObject`s. Instances can be created and members accessed via dedicated instructions and runtime helpers.
+
+Where implemented
+
+- AST: `EObjectDecl`, `EObjectInst`, `EMemberAccess`, `EMemberSet` in `src/AST.hs`.
+- Compiler: method extraction and code object generation in `src/Compiler.hs`.
+
+### macros
+
+Overview
+
+- Macros operate on raw S-expressions during a macro-expansion phase. Built-in macros such as `when`, `unless`, and `cond` expand to core forms (`if`, etc.).
+
+Where implemented
+
+- Macro system: `src/MacroExpander.hs` and macro environment `defaultMacroEnv` used by the compiler.
+
+### package / import (module-level forms)
+
+Overview
+
+- `package` names the current module (AST: `EPackage`). `import` requests another module and is resolved to a `.top` file; the compiler recursively compiles imports and merges definitions.
+
+Where implemented
+
+- AST: `EPackage`, `EImport` (`src/AST.hs`).
+- Compiler: `compileTopineurFile`, `resolveModulePath`, `loadModule`, `collectTopineurImports` (`src/Compiler.hs`).
+
+### annotations
+
+Overview
+
+- Topineur supports annotations on definitions (AST `Annotation` type) that can influence compilation (for instance `Cache` for memoization).
+
+Where implemented
+
+- AST: `Annotation` in `src/AST.hs`.
+- Codegen and compiler passes may check annotations when producing code.
+
+### error handling and runtime notes
+
+- Compile-time errors: `ParseError`, `SyntaxError` (AST/compiler). Runtime errors include `StackUnderflow`, `UndefinedFunction`, `TypeError`, `RuntimeError` (see `src/VM.hs`).
+- Functions return the value of their last expression; at bytecode level the VM uses `IReturn` to return values.
+
+### References and where to read the code
+
+- Grammar, language concepts and idioms: `docs/LANGUAGE_GUIDE.md`.
+- AST nodes and instruction set: `src/AST.hs`.
+- Compiler passes, module resolution and top-level compilation: `src/Compiler.hs`.
+- Code generation: `src/CodeGen.hs`.
+- VM and instruction execution: `src/VM.hs`.
+- Macros: `src/MacroExpander.hs`.
+- Builtins (IO and primitives): `src/Builtins.hs`.
+
+If you'd like, I can now:
+
+- add a concise cheat-sheet listing each compound form with one-line syntax and one-line semantics, or
+- create runnable example `.top` files under `content/docs/examples/compound/` that demonstrate each form with a short comment and include a short HOWTO for compiling/running with the Glados CLI.

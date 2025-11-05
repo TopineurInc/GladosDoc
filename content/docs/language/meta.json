@@ -13,6 +13,7 @@
     "reference/lexical",
     "reference/import",
     "reference/expressions",
-    "reference/simple_statements"
+    "reference/simple_statements",
+    "reference/compound_statements"
   ]
 }
