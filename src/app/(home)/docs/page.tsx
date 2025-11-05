@@ -1,4 +1,4 @@
-import { Book, GraduationCap, Presentation, FolderGit } from "lucide-react";
+import { Book, GraduationCap } from "lucide-react";
 import Link, { type LinkProps } from "next/link";
 
 export default function DocsPage() {
@@ -24,20 +24,6 @@ export default function DocsPage() {
               "Step-by-step guides for beginners and advanced users.",
             icon: <GraduationCap className="size-full" />,
             href: "/docs/tutorials",
-          },
-          {
-            name: "Best Practices",
-            description:
-              "Coding standards, design principles, and optimisation techniques.",
-            icon: <Presentation className="size-full" />,
-            href: "/docs/best-practices",
-          },
-          {
-            name: "Sample Projects",
-            description:
-              "Real-world examples, applications, or projects built using the language.",
-            icon: <FolderGit className="size-full" />,
-            href: "/docs/sample-projects",
           },
         ].map((item) => (
           <Item key={item.name} href={item.href}>
