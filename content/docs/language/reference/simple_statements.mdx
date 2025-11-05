@@ -1,0 +1,112 @@
+---
+title: Simple Statement
+description: Defines statements that compute values and operations.
+icon: ChartNoAxesColumn
+---
+
+## Simple statements (Topineur)
+
+Topineur is an expression-oriented Lisp dialect. This page is a focused reference for Topineur's simple forms.
+
+Topineur does not draw a strict statement vs expression line — almost everything is an expression. Constructs that other languages expose as simple statements are represented in Topineur as expressions, special forms, or top-level definitions. Below we summarize the Topineur forms and point to the relevant implementation files in the Glados repository.
+
+### Expression statements
+
+Any expression can be used as a statement in Topineur; its value is returned to the surrounding context. At top-level, expressions produce values that may be used by the REPL or ignored by the program.
+
+Example:
+
+```topineur
+(print "Hello") |- expression used for its side effect
+```
+
+Runtime: `src/VM.hs` evaluates expressions by executing the generated `CodeObject` instructions; side-effecting builtins like `print`, `display`, `format` are implemented in `src/Builtins.hs`.
+
+### Definitions (define)
+
+Topineur's `define` is the primary form for binding names. It covers what Python does with assignments and `def` function definitions.
+
+Function sugar example (rewrites to a lambda during parsing):
+
+```
+(define (square x) (* x x))
+```
+
+Plain binding example:
+
+```
+(define pi 314)
+```
+
+Compiler: `src/Compiler.hs` collects top-level `define`s into `CodeObject`s; `src/CodeGen.hs` lowers definitions into bytecode.
+
+### Assignment and mutation
+
+Topineur's core is mostly functional: local bindings are provided by `let` and `letrec`. There is no general-purpose `set!` in the core syntax; instead, mutation is less emphasized. Global bindings can be set at top-level using `define` and updated via compiler/VM primitives (`IAssignGlobal` instruction exists in `src/AST.hs` and `src/VM.hs` shows how globals are updated with `IAssignGlobal`).
+
+Local assignment is modeled through locals and instructions (`IAssign`), which are produced by the compiler when compiling `let`/`letrec` forms and other constructs that assign to local slots.
+
+### Imports and packages
+
+The `import` mechanism and package resolution were covered in the import system page. Topineur uses `(import module.name)` forms and resolves them to `.top` files using `splitModuleName` and `resolveModulePath` in `src/Compiler.hs`.
+
+### Control-flow short forms
+
+Topineur does not provide a `pass` keyword, and while loop-control instructions exist at the VM/instruction level they may be incomplete; use recursion and tail calls instead of imperative loops. In Topineur:
+
+- `begin` groups expressions for sequencing.
+- `if` is an expression and selects between branches.
+- VM instructions such as `IWhile`, `IFor`, `IBreak`, `IContinue` appear in the instruction set (`src/AST.hs`) and are handled in `src/VM.hs` (some may be unimplemented). Prefer recursion and tail-call style for loops.
+
+Example using tail recursion (helper):
+
+```
+(define (loop n)
+	(if (<= n 0)
+			#t
+			(begin
+				(println n)
+				(loop (- n 1)))))
+
+(loop 5)
+```
+
+### Exception/Assertion
+
+Topineur reports runtime errors via the VM error types defined in `src/VM.hs` (`StackUnderflow`, `UndefinedFunction`, `TypeError`, `RuntimeError`). There is no built-in `assert` statement in the core language; implementers typically provide an `assert` helper in the standard library or a builtin if desired.
+
+### Return values
+
+Functions return the value of the last expression. There is no separate `return` statement in the language; instead a function's body evaluates to the return value or you can `IReturn` at the bytecode level (handled by the compiler and VM).
+
+Example:
+
+```
+(define (maybe x)
+	(if x
+			1
+			0)) ; function evaluates to the value of the chosen branch
+```
+
+### Builtins with statement-like behaviour
+
+Several builtins are commonly used for side-effects (thus behaving like statements):
+
+- `print`, `println`, `display` — output to stdout (`src/Builtins.hs`).
+- `input`, `read-line` — read from stdin.
+- `format` — formatted output control.
+
+These run in IO and are implemented in Haskell; they are invoked by the VM when the compiled code pushes a `VBuiltin` to the stack and calls it.
+
+### Practical guidelines
+
+- Favor expression composition over imperative statements; Topineur is designed for functional patterns.
+- Use `let`/`letrec` to create local bindings and `define` for top-level bindings.
+- Prefer tail-recursive forms or higher-order functions for iteration; rely on the compiler's TCO where available (see `docs/LANGUAGE_GUIDE.md` and `CompilerConfig.cfgTCO`).
+
+
+If you'd like, I can now:
+
+- add small runnable examples under `content/docs/examples/` demonstrating `define`, `let`, sequencing with `begin`, and common builtins, or
+- expand this page with a side-by-side mapping table (common statement concepts → Topineur equivalents) for quick migration guidance.
+

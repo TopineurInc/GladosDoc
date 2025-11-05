@@ -12,6 +12,7 @@
     "guide",
     "reference/lexical",
     "reference/import",
-    "reference/expressions"
+    "reference/expressions",
+    "reference/simple_statements"
   ]
 }
