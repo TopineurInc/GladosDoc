@@ -1,0 +1,205 @@
+---
+title: Lexical analysis
+description: Tokenizes source code for compilation.
+icon: Braces
+---
+
+**Topineur** programs are first processed by a **tokenizer** that turns source **bytes** into a linear stream of **tokens** consumed by the parser. The documentation below describes the lexical structure implemented by the reference compiler and used by tooling (formatters, linters, syntax highlighters).
+
+## Line structure
+
+Topineur distinguishes physical lines and logical lines.
+
+### Physical lines
+
+A physical line is terminated by one of the following byte sequences:
+
+- the **Unix** form: `ASCII LF` (linefeed),
+- the **Windows** form: `ASCII CR LF` (carriage return followed by linefeed),
+- the **Classic Mac OS** form: `ASCII CR` (carriage return).
+
+The tokenizer normalizes any of these sequences to a single `ASCII LF` (`U+000A`) in its internal representation. This normalization is applied across the file, including inside string literals — tooling that maps byte offsets to character offsets should take normalization into account.
+
+Formally:
+
+```
+newline: <ASCII LF> | <ASCII CR> <ASCII LF> | <ASCII CR>
+```
+
+The end of input also implicitly terminates the final physical line.
+
+### Logical lines
+
+A logical line is a sequence of tokens terminated by a `NEWLINE` token. Topineur uses explicit block delimiters (curly braces `{}` and the `do`/`end` pair) and expression delimiters — indentation is not semantically significant for the core grammar.
+
+## Comments
+
+Topineur uses a single-line comment marker: `|-`. A comment begins with `|-` (when not in a string literal) and continues to the end of the physical line. Comments are discarded by the parser and do not produce tokens.
+
+```topineur
+|- this is a comment
+def foo(): Int { top 42 }
+```
+
+There is no built-in block comment syntax in the core language; large comments should be represented as contiguous `|-` lines or with a documentation convention.
+
+## Blank lines
+
+A physical line that contains only whitespace and optionally a comment is considered blank and has no effect on parsing. Tools may treat sequences of blank lines as documentation separators.
+
+## Whitespace
+
+Whitespace characters (**space** and **tab**) separate tokens but are otherwise ignored by the tokenizer except within string literals. Tokenization is greedy: the tokenizer always matches the longest valid token starting at the current position.
+
+## Identifiers and keywords
+
+Identifiers in Topineur follow conventional rules:
+
+- Start with a letter (**A–Z**, **a–z**) or underscore `_`.
+- Continue with **letters**, **digits** or **underscores**.
+
+Informal regex:
+
+```
+identifier: /[A-Za-z_][A-Za-z0-9_]*/
+```
+
+By convention, type names start with an uppercase letter:
+
+```
+type-identifier: /[A-Z][A-Za-z0-9_]*/
+```
+
+The tokenizer normalizes identifiers using **Unicode NFKC** normalization before comparison; the reference implementation accepts Unicode letters and digits beyond ASCII following typical language-tooling practices.
+
+### Keywords
+
+The following words are reserved as Topineur keywords (the canonical list is maintained in the grammar source):
+
+```
+package   import    def     let
+object    type      fun     for
+in        do        end     if
+then      else      while   return
+top       self      true    false
+```
+
+Keywords are recognized by the tokenizer by matching the identifier pattern and then checking against the reserved set.
+
+## Literals
+
+Topineur supports the following literal kinds in the core language:
+
+- String literals (double-quoted)
+- Integer literals
+- Floating-point literals
+
+### String literals
+
+String literals are delimited by double quotes (`"`). The opening `"` is terminated by the next unescaped `"` on the same line (escaped quotes and other escape sequences are allowed). The tokenizer produces a `STRING` token containing the raw contents (unescaping is performed by later passes or the runtime).
+
+Example:
+
+```topineur
+let s: String = "Hello, Topineur!"
+```
+
+### Escape sequences
+
+Inside double-quoted strings, a backslash (`\`) introduces an escape. The reference implementation recognizes the following escapes (non-exhaustive):
+
+- `\\` — backslash
+- `\"` — double quote
+- `\n` — newline
+- `\r` — carriage return
+- `\t` — horizontal tab
+- `\uXXXX` — Unicode codepoint (hex)
+
+Unterminated strings are lexical errors.
+
+### Numeric literals
+
+Topineur supports integer and floating-point literals. The tokenizer emits a `NUMBER` token with a subtype indicating integer or float.
+
+Informal patterns:
+
+```
+integer: /[0-9]+/
+float:   /[0-9]+\.[0-9]+/
+```
+
+Examples:
+
+```topineur
+let i: Int = 42
+let f: Float = 3.1415
+```
+
+Digit grouping with underscores is not part of the core lexical grammar unless explicitly added by the implementation.
+
+## Decorators
+
+Topineur supports decorator markers placed before declarations. A decorator is introduced with an at-sign `@` followed by an identifier. The tokenizer emits a `DECORATOR` token (or a pair of tokens: the `@` operator followed by an identifier) depending on the tooling integration.
+
+Example:
+
+```topineur
+@cache
+def fib(n: Int): Int { ... }
+```
+
+Highlighters should map the identifier after `@` to a decorator scope (e.g., `entity.name.decorator.topineur`) to allow distinct styling.
+
+## Operators and delimiters
+
+Topineur defines a set of operators and punctuation. Tokenization must prefer the longest possible match (for example `..` should be matched before `.`).
+
+Common tokens (informal list):
+
+```
+Arithmetic:      +  -  *  /  %  ++
+Comparison:      ==  !=  <  >  <=  >=
+Range:           ..
+Assignment:      =  (compound assignments may exist in the grammar)
+Member access:   .
+Delimiters:      ( ) [ ] { } , :
+Other:           @  ->
+```
+
+Example usage:
+
+```topineur
+def add(a: Int, b: Int): Int {
+    top a + b
+}
+
+def main(): Int {
+    for i in 0..5 do
+        println(i)
+    end
+    person.name
+}
+```
+
+## Error conditions
+
+Lexical errors include invalid UTF-8 input, unterminated string literals, and malformed numeric literals. Because Topineur uses explicit block markers for grouping, inconsistent indentation is a style issue rather than a lexical error in the core grammar.
+
+## Examples
+
+```topineur
+package math.primes
+
+|- Compute the nth Fibonacci number (naive)
+@cache
+def fib(n: Int): Int {
+    if n <= 1 then top n
+    else top fib(n-1) + fib(n-2)
+}
+
+def main(): Int {
+    let v: Int = fib(10)
+    println("fib(10) = " ++ show(v))
+    top 0
+}
+```
