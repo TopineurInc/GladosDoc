@@ -1,0 +1,153 @@
+---
+title: Expressions
+description: Defines statements that compute values and operations.
+icon: TestTube
+---
+
+## Expressions (Topineur)
+
+This page describes expressions in the Topineur language.
+
+Topineur is a small, expression-oriented Lisp dialect. Programs are S-expressions; expressions compute values and may perform side effects via builtins. This page summarizes the common expression forms with examples and links into the source for implementers.
+
+## Quick grammar summary
+
+Topineur source is read as symbolic S-expressions. The following is a compact overview of the expression forms:
+
+```
+program      ::= form*
+
+form         ::= definition | expression
+
+definition   ::= (define defn-body)
+defn-body    ::= (identifier+ ) expression    ; function sugar
+							 | identifier expression        ; plain binding
+
+expression   ::= literal | identifier | quote | lambda | if | begin
+							 | let | letrec | application
+
+literal      ::= integer | boolean | string
+application  ::= (expression expression*)     ; function call
+```
+
+## Literals
+
+- Integer: 42, -7
+- Boolean: `#t` (true), `#f` (false); `t` aliases `#t`, `nil` aliases `#f`.
+- String: double-quoted with escapes (e.g. `"hello\n"`).
+
+In the AST these map to `EInt`, `EFloat`, `EBool`, and `EString` nodes.
+
+## Identifiers
+
+Identifiers are sequences of letters, digits and a small set of symbols. They denote variables, top-level definitions and builtin names. Examples: `x`, `+`, `display`, `my-func`.
+
+## Function application
+
+Function calls are ordinary lists where the first element is the operator expression followed by arguments. Arguments are evaluated left-to-right (applicative order) before the call is applied.
+
+Example:
+
+```
+(print (+ 1 2))  ; evaluate + -> 3, then print
+```
+
+When the operator evaluates to a builtin, the Haskell implementation in `src/Builtins.hs` runs; when it evaluates to a closure, the VM allocates a new frame and executes the closure's code object (`VM.hs` handles frame allocation and call dispatch).
+
+## Lambda (anonymous function)
+
+Lambdas create closures and capture free variables lexically. Example:
+
+```
+(define (adder n)
+	(lambda (x) (+ x n)))
+
+(define add5 (adder 5))
+(add5 3) ; => 8
+```
+
+In the compiler pipeline the lambda form becomes a `VClosure` value and its code is represented by a `CodeObject`.
+
+## define
+
+Top-level and local definitions use `define`. Function sugar `(define (f a b) body)` rewrites to `(define f (lambda (a b) body))` during parsing/transform.
+
+```
+(define (square x) (* x x))
+```
+
+Top-level `define` forms are compiled into the module's `CodeObject` map and become entries available to other modules after import resolution.
+
+## Conditionals (if)
+
+```
+(if cond
+		then-expr
+		else-expr)
+```
+
+`cond` is evaluated once; if it yields `#f` (or `nil`) the else branch runs, otherwise the then branch runs. `if` is a special form and does not evaluate both branches.
+
+## Sequencing (begin)
+
+```
+(begin expr1 expr2 ... exprN)
+```
+
+Evaluates expressions in order and returns the value of the last expression. Useful for composing side-effecting calls.
+
+## Local bindings (let / letrec)
+
+Non-recursive local bindings:
+
+```
+(let ((name value) ...)
+	body)
+```
+
+Recursive local bindings (mutually recursive):
+
+```
+(letrec ((name expr) ...)
+	body)
+```
+
+`letrec` is implemented so the bindings are visible within their own value expressions (useful for recursive functions). The compiler lowers `let/letrec` during closure conversion and code generation.
+
+## Quoting
+
+`'(1 2 3)` is syntax sugar for `(quote (1 2 3))`. Quoted S-expressions are treated as data (S-expr literals) rather than code.
+
+## Evaluation order
+
+Topineur uses strict call-by-value evaluation.
+
+Order rules:
+- Evaluate operator expression first.
+- Evaluate arguments left-to-right.
+- Apply the result:
+	- builtin -> call Haskell implementation;
+	- closure -> push new frame and run closure's code.
+
+## Examples
+
+Hello world:
+
+```
+(define (main)
+	(format #t "Hello from GLaDOS!~%"))
+```
+
+Factorial example (recursive):
+
+```
+(define (fact n)
+	(if (<= n 1)
+			1
+			(* n (fact (- n 1)))))
+
+(define (main)
+	(println (fact 5)))
+```
+
+Memoization and annotations: Topineur supports an annotation mechanism and a `Cache` annotation in the AST; the compiler can use annotations during code generation to emit memoization metadata.

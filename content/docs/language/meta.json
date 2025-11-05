@@ -11,6 +11,7 @@
     "---Technical Documentation---",
     "guide",
     "reference/lexical",
-    "reference/import"
+    "reference/import",
+    "reference/expressions"
   ]
 }
